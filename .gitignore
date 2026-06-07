@@ -14,4 +14,4 @@ ipynb_checkpoints/
 export_rdata.ipynb
 
 # data
-data/
+data/*
