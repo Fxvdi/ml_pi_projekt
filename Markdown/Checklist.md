@@ -24,6 +24,10 @@
 - [x] Isolation Forest als erste Baseline implementiert
 - [x] Local Outlier Factor als zweites Vergleichsmodell implementiert
 - [x] One-Class SVM als dritte Baseline implementiert
+- [x] EllipticEnvelope als vierte Baseline implementiert
+- [x] HBOS als fünfte Baseline implementiert
+- [x] COPOD als sechste Baseline implementiert
+- [x] ECOD als siebte Baseline implementiert
 - [x] Random Search als erste Parametersuche angebunden
 - [x] TEP-Daten werden als vier Splits geladen: Training / Testing, fault-free / faulty
 - [x] Feasible unsupervised training auf `train_fault_free`
@@ -38,13 +42,8 @@
 ## Noch nicht implementiert
 
 - [ ] PyOD als Referenz ganz am Ende integrieren
-- [ ] Einen dritten Detektor ergänzen
-- [ ] EllipticEnvelope als leichtere weitere Baseline prüfen
 - [ ] Autoencoder als neuronale Baseline prüfen
 - [ ] LODA als schnelle Baseline prüfen
-- [ ] HBOS als schnelle Baseline prüfen
-- [ ] COPOD als robuste Baseline aus dem PyOD-Umfeld prüfen
-- [ ] ECOD als robuste Baseline aus dem PyOD-Umfeld prüfen
 - [ ] Extended Isolation Forest als Ensemble-Variante prüfen
 - [ ] Successive Halving als Budget-Strategie implementieren
 - [ ] Hyperband als Budget-Strategie ergänzen
@@ -54,13 +53,13 @@
 - [ ] Bayesian Optimization als Suchstrategie ergänzen
 - [ ] NSGA-II als multiobjective Suchstrategie prüfen
 - [ ] MOGA-FS als Feature-Selection-Ansatz prüfen
+- [ ] RLNAS als neural architecture search Ansatz prüfen
+- [ ] ASAD als Auto-Selective Anomaly Detection Ansatz prüfen
 - [ ] Meta-Learning als Initialisierung einsetzen
 - [ ] Semi-supervised learning vorbereiten
 - [ ] Streaming / Online-Detection vorbereiten
 - [ ] Ergebnisse systematisch speichern
 - [ ] Ein kleines CLI oder Skript für wiederholbare Runs bauen
-- [ ] EllipticEnvelope als leichtere weitere Baseline prüfen
-- [ ] Autoencoder als neuronale Baseline prüfen
 
 ## Forschungsstand, noch offen in der Implementierung
 
@@ -73,6 +72,8 @@
 - [x] Bayesian Optimization als mögliche Suchstrategie bekannt
 - [x] NSGA-II als mögliche multiobjective Suchstrategie bekannt
 - [x] MOGA-FS als möglicher Feature-Selection-Ansatz bekannt
+- [x] RLNAS als möglicher neural architecture search Ansatz bekannt
+- [x] ASAD als möglicher Auto-Selective Anomaly Detection Ansatz bekannt
 - [x] Meta-Learning als möglicher Ansatz bekannt
 - [x] AnoGAN als mögliche neuronale Methode bekannt
 - [x] PyOD als Referenzframework bekannt

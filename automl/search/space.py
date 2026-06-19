@@ -7,6 +7,28 @@ def build_default_search_space(*, random_state: int | None = None) -> dict[str, 
     """Return a small search space for the built-in detectors."""
 
     return {
+        "elliptic_envelope": {
+            "contamination": [0.01, 0.03, 0.05, 0.1],
+            "support_fraction": [None, 0.5, 0.75],
+            "assume_centered": [False, True],
+            "random_state": [random_state],
+        },
+        "hbos": {
+            "contamination": [0.01, 0.03, 0.05, 0.1],
+            "n_bins": [5, 10, 20, 30],
+            "alpha": [1e-12, 1e-9, 1e-6],
+            "use_scaler": [True],
+        },
+        "copod": {
+            "contamination": [0.01, 0.03, 0.05, 0.1],
+            "use_scaler": [True],
+            "tail_smoothing": [1e-12, 1e-9, 1e-6],
+        },
+        "ecod": {
+            "contamination": [0.01, 0.03, 0.05, 0.1],
+            "use_scaler": [True],
+            "tail_smoothing": [1e-12, 1e-9, 1e-6],
+        },
         "isolation_forest": {
             "contamination": [0.01, 0.03, 0.05, 0.1],
             "n_estimators": [100, 200, 300],
