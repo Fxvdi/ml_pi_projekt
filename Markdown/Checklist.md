@@ -39,10 +39,21 @@
 
 - [ ] PyOD als Referenz ganz am Ende integrieren
 - [ ] Einen dritten Detektor ergänzen
+- [ ] EllipticEnvelope als leichtere weitere Baseline prüfen
+- [ ] Autoencoder als neuronale Baseline prüfen
+- [ ] LODA als schnelle Baseline prüfen
+- [ ] HBOS als schnelle Baseline prüfen
+- [ ] COPOD als robuste Baseline aus dem PyOD-Umfeld prüfen
+- [ ] ECOD als robuste Baseline aus dem PyOD-Umfeld prüfen
+- [ ] Extended Isolation Forest als Ensemble-Variante prüfen
 - [ ] Successive Halving als Budget-Strategie implementieren
+- [ ] Hyperband als Budget-Strategie ergänzen
 - [ ] Vollsuchmodus für alle Detektoren mit Strategie implementieren
 - [ ] SMAC als Suchstrategie implementieren
 - [ ] Irace als Suchstrategie implementieren
+- [ ] Bayesian Optimization als Suchstrategie ergänzen
+- [ ] NSGA-II als multiobjective Suchstrategie prüfen
+- [ ] MOGA-FS als Feature-Selection-Ansatz prüfen
 - [ ] Meta-Learning als Initialisierung einsetzen
 - [ ] Semi-supervised learning vorbereiten
 - [ ] Streaming / Online-Detection vorbereiten
@@ -57,15 +68,25 @@
 - [x] SMAC als mögliche Suchstrategie bekannt
 - [x] GGA als möglicher Suchansatz bekannt
 - [x] Successive Halving als Budget-Strategie bekannt
+- [x] Hyperband als Budget-Strategie bekannt
 - [x] Irace als mögliche Suchstrategie bekannt
+- [x] Bayesian Optimization als mögliche Suchstrategie bekannt
+- [x] NSGA-II als mögliche multiobjective Suchstrategie bekannt
+- [x] MOGA-FS als möglicher Feature-Selection-Ansatz bekannt
 - [x] Meta-Learning als möglicher Ansatz bekannt
 - [x] AnoGAN als mögliche neuronale Methode bekannt
 - [x] PyOD als Referenzframework bekannt
 - [x] LSCP als Vergleichsframework bekannt
 - [x] TODS als Vergleichsframework bekannt
 - [x] AutoOD als Vergleichsframework bekannt
+- [x] LODA als mögliche Baseline bekannt
+- [x] HBOS als mögliche Baseline bekannt
+- [x] COPOD als mögliche Baseline bekannt
+- [x] ECOD als mögliche Baseline bekannt
+- [x] Extended Isolation Forest als mögliche Baseline bekannt
 
 ## Nächste Arbeitspakete
 
 - [ ] AnoGAN als späteres Deep-Learning-Modell prüfen
+- [ ] TODS als Vergleichsframework genauer untersuchen
 - [ ] Vergleichstabelle für Methoden und Frameworks erstellen
