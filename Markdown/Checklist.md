@@ -19,6 +19,8 @@
 - [x] Vergleichsworkflow für mehrere Detektoren eingebaut
 - [x] Suchstrategien über CLI auswählbar gemacht
 - [x] Ergebnisdarstellung für Runs lesbar formatiert
+- [x] Externe Aufbereitung für PyOD und TODS liegt bereits vor
+- [x] Vergleichstabelle für Methoden und Frameworks erstellt
 - [x] README um Konzept und Workflow ergänzt
 
 ## Implementiert
@@ -48,7 +50,7 @@
 
 ## Noch nicht implementiert
 
-- [ ] PyOD als Referenz ganz am Ende integrieren
+- [x] PyOD als Referenz ganz am Ende integrieren (extern aufbereitet)
 - [ ] Autoencoder als neuronale Baseline prüfen
 - [ ] LODA als schnelle Baseline prüfen
 - [ ] Extended Isolation Forest als Ensemble-Variante prüfen
@@ -62,7 +64,7 @@
 - [ ] Meta-Learning als Initialisierung einsetzen
 - [ ] Semi-supervised learning vorbereiten
 - [ ] Streaming / Online-Detection vorbereiten
-- [ ] Ergebnisse systematisch speichern
+- [x] Ergebnisse systematisch speichern
 - [x] Ein kleines CLI oder Skript für wiederholbare Runs gebaut
 
 ## Forschungsstand, noch offen in der Implementierung
@@ -82,7 +84,7 @@
 - [x] AnoGAN als mögliche neuronale Methode bekannt
 - [x] PyOD als Referenzframework bekannt
 - [x] LSCP als Vergleichsframework bekannt
-- [x] TODS als Vergleichsframework bekannt
+- [x] TODS als Vergleichsframework bekannt (extern aufbereitet)
 - [x] AutoOD als Vergleichsframework bekannt
 - [x] LODA als mögliche Baseline bekannt
 - [x] HBOS als mögliche Baseline bekannt
@@ -93,5 +95,5 @@
 ## Nächste Arbeitspakete
 
 - [ ] AnoGAN als späteres Deep-Learning-Modell prüfen
-- [ ] TODS als Vergleichsframework genauer untersuchen
+- [x] TODS als Vergleichsframework extern aufbereitet
 - [ ] Vergleichstabelle für Methoden und Frameworks erstellen

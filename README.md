@@ -181,4 +181,8 @@ Später kann das System erweitert werden um:
 - weitere Search-Strategien
 - weitere Frameworks wie PyOD oder AutoOD
 
+## Vergleichstabelle
+
+Eine erste Übersicht über Methoden und externe Frameworks liegt in [Markdown/Comparison_Table.md](Markdown/Comparison_Table.md).
+
 

@@ -12,6 +12,7 @@ from automl.pipeline import (
     run_random_search_workflow,
     run_successive_halving_workflow,
 )
+from automl.persistence import append_result_jsonl, save_result_json
 from automl.reporting import format_run_result
 from automl.registry import build_default_registry
 
@@ -40,6 +41,14 @@ def build_parser() -> argparse.ArgumentParser:
         default="minimal",
         help="Choose the execution strategy.",
     )
+    parser.add_argument(
+        "--save-result",
+        help="Write the best result as JSON to the given file.",
+    )
+    parser.add_argument(
+        "--append-history",
+        help="Append the best result as JSONL to the given file.",
+    )
     return parser
 
 
@@ -65,6 +74,12 @@ def main() -> None:
         result = run_minimal_workflow(data_dir, detector_name=args.detector)
 
     print(format_run_result(result))
+
+    if args.save_result:
+        save_result_json(result, args.save_result)
+
+    if args.append_history:
+        append_result_jsonl(result, args.append_history)
 
 
 if __name__ == "__main__":
