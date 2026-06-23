@@ -1,0 +1,22 @@
+{
+  "detector_name": "one_class_svm",
+  "parameters": {
+    "contamination": 0.005,
+    "nu": 0.001,
+    "kernel": "rbf",
+    "gamma": "scale",
+    "degree": 3,
+    "coef0": 0.1
+  },
+  "metrics": {
+    "train_time_seconds": 9.787838199999896,
+    "pr_auc": 0.9985949958837396,
+    "roc_auc": 0.9719141934509549,
+    "f1": 0.9673387266866332
+  },
+  "score_metric": "pr_auc",
+  "score_value": 0.9985949958837396,
+  "strategy_name": "successive_halving",
+  "evaluated_candidates": 25,
+  "parameter_budget_level": 0
+}

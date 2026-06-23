@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 import math
 from pathlib import Path
 from typing import Any
+import warnings
 
 from .config import AutoMLConfig
 from .data.tep import TEPSplits, load_tep_splits
@@ -43,12 +44,14 @@ class AutoMLPipeline:
         parameter_budget_level: int | None = None,
     ) -> tuple[float, AutoMLResult] | None:
         detector = self.registry.create(detector_name, **parameters)
-        evaluation: EvaluationResult = evaluate_detector(
-            detector=detector,
-            train_dataset=train_dataset,
-            test_dataset=test_dataset,
-            contamination=self.config.contamination,
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            evaluation: EvaluationResult = evaluate_detector(
+                detector=detector,
+                train_dataset=train_dataset,
+                test_dataset=test_dataset,
+                contamination=self.config.contamination,
+            )
 
         score = evaluation.metrics.get(self.config.metric)
         if score is None:

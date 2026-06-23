@@ -57,6 +57,7 @@
 - [ ] SMAC als Suchstrategie implementieren
 - [ ] Irace als Suchstrategie implementieren
 - [ ] Bayesian Optimization als Suchstrategie ergänzen
+- [ ] Optuna als Suchstrategie für Hyperparameter-Optimierung einbauen
 - [ ] NSGA-II als multiobjective Suchstrategie prüfen
 - [ ] MOGA-FS als Feature-Selection-Ansatz prüfen
 - [ ] RLNAS als neural architecture search Ansatz prüfen
@@ -97,3 +98,4 @@
 - [ ] AnoGAN als späteres Deep-Learning-Modell prüfen
 - [x] TODS als Vergleichsframework extern aufbereitet
 - [ ] Vergleichstabelle für Methoden und Frameworks erstellen
+- [ ] Optuna als nächstes Suchframework evaluieren
