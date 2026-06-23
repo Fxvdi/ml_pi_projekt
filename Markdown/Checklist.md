@@ -42,6 +42,7 @@
 - [x] Random Search als Suchstrategie für Parameter und Detektoren eingebaut
 - [x] Successive Halving als Budget-Strategie implementiert
 - [x] Hyperband als Budget-Strategie implementiert
+- [x] Parameter-Budget pro Suchstufe ergänzt
 - [x] Vollsuchmodus über alle registrierten Detektoren mit Strategieauswahl möglich
 - [x] Ein kleines CLI für wiederholbare Runs gebaut
 

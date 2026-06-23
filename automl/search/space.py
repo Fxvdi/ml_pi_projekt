@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import ceil
+
 
 def build_default_search_space(*, random_state: int | None = None) -> dict[str, dict[str, list[object]]]:
     """Return a small search space for the built-in detectors."""
@@ -64,3 +66,47 @@ def build_default_search_space(*, random_state: int | None = None) -> dict[str, 
             "tail_smoothing": [1e-12, 1e-10, 1e-9, 1e-8, 1e-6, 1e-4],
         },
     }
+
+
+def build_budgeted_search_spaces(
+    *,
+    random_state: int | None = None,
+    levels: int = 3,
+) -> list[dict[str, dict[str, list[object]]]]:
+    """Return progressively larger search spaces for parameter budgeting."""
+
+    if levels < 1:
+        raise ValueError("levels must be at least 1")
+
+    base_space = build_default_search_space(random_state=random_state)
+    if levels == 1:
+        return [base_space]
+
+    budgeted_spaces: list[dict[str, dict[str, list[object]]]] = []
+    for level in range(levels):
+        fraction = (level + 1) / levels
+        budgeted_spaces.append(_limit_search_space(base_space, fraction))
+
+    return budgeted_spaces
+
+
+def _limit_search_space(
+    search_space: dict[str, dict[str, list[object]]],
+    fraction: float,
+) -> dict[str, dict[str, list[object]]]:
+    limited_space: dict[str, dict[str, list[object]]] = {}
+
+    for detector_name, parameters in search_space.items():
+        limited_parameters: dict[str, list[object]] = {}
+        for parameter_name, values in parameters.items():
+            values_list = list(values)
+            if len(values_list) <= 1:
+                limited_parameters[parameter_name] = values_list
+                continue
+
+            keep_count = max(1, min(len(values_list), ceil(len(values_list) * fraction)))
+            limited_parameters[parameter_name] = values_list[:keep_count]
+
+        limited_space[detector_name] = limited_parameters
+
+    return limited_space

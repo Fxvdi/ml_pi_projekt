@@ -14,3 +14,4 @@ class AutoMLConfig:
     resource_fractions: tuple[float, ...] = (0.25, 0.5, 1.0)
     reduction_factor: int = 3
     hyperband_min_resource_fraction: float = 0.125
+    parameter_budget_levels: int = 3

@@ -10,7 +10,7 @@ from .data.tep import TEPSplits, load_tep_splits
 from .registry import DetectorRegistry, build_default_registry
 from .evaluation.runner import EvaluationResult, evaluate_detector
 from .search.random_search import RandomSearch
-from .search.space import build_default_search_space
+from .search.space import build_budgeted_search_spaces, build_default_search_space
 
 
 @dataclass(slots=True)
@@ -24,6 +24,7 @@ class AutoMLResult:
     score_value: float | None = None
     strategy_name: str = ""
     evaluated_candidates: int = 0
+    parameter_budget_level: int | None = None
 
 
 class AutoMLPipeline:
@@ -39,6 +40,7 @@ class AutoMLPipeline:
         parameters: dict[str, Any],
         train_dataset: Any,
         test_dataset: Any,
+        parameter_budget_level: int | None = None,
     ) -> tuple[float, AutoMLResult] | None:
         detector = self.registry.create(detector_name, **parameters)
         evaluation: EvaluationResult = evaluate_detector(
@@ -58,6 +60,7 @@ class AutoMLPipeline:
             metrics=evaluation.metrics,
             score_metric=self.config.metric,
             score_value=score,
+            parameter_budget_level=parameter_budget_level,
         )
 
     def _finalize_result(self, result: AutoMLResult, *, strategy_name: str, evaluated_candidates: int) -> AutoMLResult:
@@ -68,6 +71,7 @@ class AutoMLPipeline:
         candidates: list[dict[str, object]],
         dataset: TEPSplits,
         resource_fractions: list[float],
+        parameter_budget_level: int | None = None,
     ) -> AutoMLResult | None:
         survivors = candidates
         best_result: AutoMLResult | None = None
@@ -84,6 +88,7 @@ class AutoMLPipeline:
                     parameters,
                     train_subset,
                     dataset.evaluation_dataset(),
+                    parameter_budget_level=parameter_budget_level,
                 )
                 if evaluation_result is None:
                     continue
@@ -173,7 +178,11 @@ class AutoMLPipeline:
         """Run successive halving over randomly sampled detector candidates."""
 
         selected_detectors = detector_names or self.registry.names()
-        search_space = build_default_search_space(random_state=self.config.random_state)
+        budgeted_spaces = build_budgeted_search_spaces(
+            random_state=self.config.random_state,
+            levels=max(1, self.config.parameter_budget_levels),
+        )
+        search_space = budgeted_spaces[0]
         search = RandomSearch(parameter_space=search_space, random_state=self.config.random_state)
         candidates = search.suggest(selected_detectors, self.config.max_trials)
 
@@ -181,7 +190,7 @@ class AutoMLPipeline:
         if not resource_fractions or resource_fractions[-1] < 1.0:
             resource_fractions.append(1.0)
 
-        result = self._evaluate_candidate_pool(candidates, dataset, resource_fractions)
+        result = self._evaluate_candidate_pool(candidates, dataset, resource_fractions, parameter_budget_level=0)
         if result is None:
             raise ValueError(f"No detector produced the requested metric: {self.config.metric}")
 
@@ -191,8 +200,10 @@ class AutoMLPipeline:
         """Run a small Hyperband-style search over successive-halving brackets."""
 
         selected_detectors = detector_names or self.registry.names()
-        search_space = build_default_search_space(random_state=self.config.random_state)
-        search = RandomSearch(parameter_space=search_space, random_state=self.config.random_state)
+        budgeted_spaces = build_budgeted_search_spaces(
+            random_state=self.config.random_state,
+            levels=max(1, self.config.parameter_budget_levels),
+        )
 
         eta = max(2, self.config.reduction_factor)
         min_resource_fraction = min(max(self.config.hyperband_min_resource_fraction, 0.01), 1.0)
@@ -209,10 +220,17 @@ class AutoMLPipeline:
             )
             initial_fraction = min(1.0, min_resource_fraction * (eta ** (s_max - bracket)))
             resource_fractions = [min(1.0, initial_fraction * (eta**step)) for step in range(bracket + 1)]
+            parameter_budget_level = min(bracket, len(budgeted_spaces) - 1)
+            search = RandomSearch(parameter_space=budgeted_spaces[parameter_budget_level], random_state=self.config.random_state)
 
             candidates = search.suggest(selected_detectors, bracket_trial_count)
             evaluated_candidates += len(candidates)
-            result = self._evaluate_candidate_pool(candidates, dataset, resource_fractions)
+            result = self._evaluate_candidate_pool(
+                candidates,
+                dataset,
+                resource_fractions,
+                parameter_budget_level=parameter_budget_level,
+            )
             if result is None:
                 continue
 

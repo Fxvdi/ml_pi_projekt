@@ -25,6 +25,9 @@ def format_run_result(result: AutoMLResult) -> str:
     if result.score_metric:
         lines.append(f"Selected metric: {result.score_metric} = {_format_float(result.score_value)}")
 
+    if result.parameter_budget_level is not None:
+        lines.append(f"Parameter budget level: {result.parameter_budget_level}")
+
     train_time = result.metrics.get("train_time_seconds")
     if train_time is not None:
         lines.append(f"Train time: {_format_float(train_time)} s")
