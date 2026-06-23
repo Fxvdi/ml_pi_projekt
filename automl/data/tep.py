@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 
@@ -14,6 +15,41 @@ class TEPDataset:
     labels: pd.Series | None = None
     fault_class: pd.Series | None = None
     name: str = ""
+
+    def subset(self, fraction: float, *, random_state: int | None = None) -> "TEPDataset":
+        """Return a row-sampled copy of the dataset."""
+
+        if not 0 < fraction <= 1:
+            raise ValueError("fraction must be in the interval (0, 1]")
+
+        row_count = max(1, int(round(len(self.features) * fraction)))
+        row_count = min(row_count, len(self.features))
+
+        if row_count >= len(self.features):
+            return TEPDataset(
+                features=self.features.copy(),
+                labels=None if self.labels is None else self.labels.copy(),
+                fault_class=None if self.fault_class is None else self.fault_class.copy(),
+                name=self.name,
+            )
+
+        random_generator = np.random.default_rng(random_state)
+        selected_indices = np.sort(random_generator.choice(len(self.features), size=row_count, replace=False))
+
+        sampled_features = self.features.iloc[selected_indices].reset_index(drop=True)
+        sampled_labels = None
+        if self.labels is not None:
+            sampled_labels = self.labels.iloc[selected_indices].reset_index(drop=True)
+        sampled_fault_class = None
+        if self.fault_class is not None:
+            sampled_fault_class = self.fault_class.iloc[selected_indices].reset_index(drop=True)
+
+        return TEPDataset(
+            features=sampled_features,
+            labels=sampled_labels,
+            fault_class=sampled_fault_class,
+            name=self.name,
+        )
 
 
 @dataclass(slots=True)

@@ -5,7 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from automl.pipeline import run_comparison_workflow, run_minimal_workflow, run_search_workflow
+from automl.pipeline import (
+    run_comparison_workflow,
+    run_hyperband_workflow,
+    run_minimal_workflow,
+    run_random_search_workflow,
+    run_successive_halving_workflow,
+)
+from automl.reporting import format_run_result
 from automl.registry import build_default_registry
 
 
@@ -29,7 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--strategy",
-        choices=["minimal", "compare", "search", "random_search"],
+        choices=["minimal", "compare", "search", "random_search", "successive_halving", "hyperband"],
         default="minimal",
         help="Choose the execution strategy.",
     )
@@ -44,14 +51,20 @@ def main() -> None:
 
     if args.strategy in {"search", "random_search"}:
         detector_names = args.compare or None
-        result = run_search_workflow(data_dir, detector_names)
+        result = run_random_search_workflow(data_dir, detector_names)
+    elif args.strategy == "successive_halving":
+        detector_names = args.compare or None
+        result = run_successive_halving_workflow(data_dir, detector_names)
+    elif args.strategy == "hyperband":
+        detector_names = args.compare or None
+        result = run_hyperband_workflow(data_dir, detector_names)
     elif args.compare is not None or args.strategy == "compare":
         detector_names = args.compare or None
         result = run_comparison_workflow(data_dir, detector_names)
     else:
         result = run_minimal_workflow(data_dir, detector_name=args.detector)
 
-    print(result)
+    print(format_run_result(result))
 
 
 if __name__ == "__main__":

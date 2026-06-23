@@ -17,6 +17,8 @@
 - [x] Ein erster Minimal-Workflow für unsupervised learning läuft
 - [x] Registry für austauschbare Detektoren eingebaut
 - [x] Vergleichsworkflow für mehrere Detektoren eingebaut
+- [x] Suchstrategien über CLI auswählbar gemacht
+- [x] Ergebnisdarstellung für Runs lesbar formatiert
 - [x] README um Konzept und Workflow ergänzt
 
 ## Implementiert
@@ -37,6 +39,10 @@
 - [x] Registry-basierte Modellauswahl
 - [x] Default-Workflow bleibt schnell und nutzt nur einen Detektor
 - [x] Vergleichsworkflow kann mehrere Detektoren gezielt ausführen
+- [x] Random Search als Suchstrategie für Parameter und Detektoren eingebaut
+- [x] Successive Halving als Budget-Strategie implementiert
+- [x] Hyperband als Budget-Strategie implementiert
+- [x] Vollsuchmodus über alle registrierten Detektoren mit Strategieauswahl möglich
 - [x] Ein kleines CLI für wiederholbare Runs gebaut
 
 ## Noch nicht implementiert
@@ -45,9 +51,6 @@
 - [ ] Autoencoder als neuronale Baseline prüfen
 - [ ] LODA als schnelle Baseline prüfen
 - [ ] Extended Isolation Forest als Ensemble-Variante prüfen
-- [ ] Successive Halving als Budget-Strategie implementieren
-- [ ] Hyperband als Budget-Strategie ergänzen
-- [ ] Vollsuchmodus für alle Detektoren mit Strategie implementieren
 - [ ] SMAC als Suchstrategie implementieren
 - [ ] Irace als Suchstrategie implementieren
 - [ ] Bayesian Optimization als Suchstrategie ergänzen
@@ -59,7 +62,7 @@
 - [ ] Semi-supervised learning vorbereiten
 - [ ] Streaming / Online-Detection vorbereiten
 - [ ] Ergebnisse systematisch speichern
-- [ ] Ein kleines CLI oder Skript für wiederholbare Runs bauen
+- [x] Ein kleines CLI oder Skript für wiederholbare Runs gebaut
 
 ## Forschungsstand, noch offen in der Implementierung
 
