@@ -52,6 +52,7 @@ def build_benchmark_metadata(
     data_dir: str | Path,
     strategy_name: str,
     random_state: int | None = None,
+    validation_fraction: float | None = None,
     split_plan: dict[str, Any] | None = None,
     detector_names: Sequence[str] | None = None,
     extra: dict[str, Any] | None = None,
@@ -63,6 +64,7 @@ def build_benchmark_metadata(
         "data_dir": str(data_dir),
         "strategy_name": strategy_name,
         "random_state": random_state,
+        "validation_fraction": validation_fraction,
         "split_plan": None if split_plan is None else _normalize_value(split_plan),
         "detector_names": None if detector_names is None else list(detector_names),
     }

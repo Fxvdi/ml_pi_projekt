@@ -19,9 +19,10 @@
 - [x] Vergleichsworkflow für mehrere Detektoren eingebaut
 - [x] Suchstrategien über CLI auswählbar gemacht
 - [x] Ergebnisdarstellung für Runs lesbar formatiert
+- [x] Vergleichsbericht für Benchmark-Suiten erzeugt
 - [x] Externe Aufbereitung für PyOD und TODS liegt bereits vor
 - [x] Vergleichstabelle für Methoden und Frameworks erstellt
-- [x] README um Konzept und Workflow ergänzt
+- [x] README um Ziel, Ablauf und Ergebnis ergänzt
 
 ## Implementiert
 
@@ -99,34 +100,34 @@
 ### Priorität 1: Vergleichsgrundlage sauber machen
 
 - [ ] Saubere Train/Validation/Test-Trennung für alle Vergleiche einziehen
-- [ ] PyOD-Adapter oder PyOD-Benchmark-Harness direkt in die Pipeline hängen
+- [x] PyOD-Adapter oder PyOD-Benchmark-Harness direkt in die Pipeline hängen
 - [ ] Einheitliche Vorverarbeitung und Threshold-Logik für alle Modelle festziehen
-- [ ] Vergleichsläufe mit mehreren Seeds und persistierten Ergebnissen etablieren
+- [x] Vergleichsläufe mit mehreren Seeds und persistierten Ergebnissen etablieren
 
 ### Benchmark-Regeln
 
 - [ ] Hauptmetrik festlegen, aktuell PR-AUC
 - [ ] Sekundärmetriken festlegen: ROC-AUC, F1 und Laufzeit
-- [ ] Gleiche Splits für AutoML und PyOD verwenden
+- [x] Gleiche Splits für AutoML und PyOD verwenden
 - [ ] Validation nur für Modell- und Strategieauswahl nutzen
 - [ ] Testsplit nur für die finale Berichterstattung verwenden
 - [ ] Gleiche Vorverarbeitung und gleiche Threshold-Logik für alle Modelle anwenden
-- [ ] Mehrere Seeds pro Experiment fahren und Mittelwert plus Streuung berichten
+- [x] Mehrere Seeds pro Experiment fahren und Mittelwert plus Streuung berichten
 - [x] Alle Läufe mit Modellname, Parametern, Seed und Metriken persistieren
 - [ ] Gleiche Budget- und Laufzeitgrenzen für AutoML und PyOD festlegen
 - [x] Einheitliche Evaluation definieren
 
 ### Split-Plan für TEP
 
-- [ ] Train nur auf `train_fault_free`
-- [ ] Validation aus einem Anteil von `train_fault_free` bilden
+- [x] Train nur auf `train_fault_free`
+- [x] Validation aus einem Anteil von `train_fault_free` bilden
 - [ ] `train_faulty` nur für spätere explorative Analysen oder zusätzliche Experimente nutzen
 - [ ] Test aus `test_fault_free` und `test_faulty` zusammensetzen
-- [ ] Validation für Suchstrategien und Modellwahl nutzen
-- [ ] Test nur für die finale Berichterstattung verwenden
-- [ ] Split-Ziehung reproduzierbar machen über festen Seed
-- [ ] Split-Informationen zusammen mit den Ergebnissen speichern
-- [ ] Gleiche Split-Definition für AutoML und PyOD verwenden
+- [x] Validation für Suchstrategien und Modellwahl nutzen
+- [x] Test nur für die finale Berichterstattung verwenden
+- [x] Split-Ziehung reproduzierbar machen über festen Seed
+- [x] Split-Informationen zusammen mit den Ergebnissen speichern
+- [x] Gleiche Split-Definition für AutoML und PyOD verwenden
 
 ### Persistenz-Plan
 

@@ -60,6 +60,10 @@ class DetectorRegistry:
     def names(self) -> list[str]:
         return sorted(self._factories)
 
+    def update_from(self, other: "DetectorRegistry") -> None:
+        for name, factory in other._factories.items():
+            self._factories[name] = factory
+
 
 def build_default_registry() -> DetectorRegistry:
     """Create a registry with the initial interchangeable detectors."""
@@ -89,4 +93,12 @@ def build_pyod_registry() -> DetectorRegistry:
     registry.register("pyod_knn", _pyod_factory("pyod.models.knn", "KNN"))
     registry.register("pyod_pca", _pyod_factory("pyod.models.pca", "PCA"))
     registry.register("pyod_ocsvm", _pyod_factory("pyod.models.ocsvm", "OCSVM"))
+    return registry
+
+
+def build_combined_registry() -> DetectorRegistry:
+    """Create a registry that exposes both built-in and PyOD-backed detectors."""
+
+    registry = build_default_registry()
+    registry.update_from(build_pyod_registry())
     return registry

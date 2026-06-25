@@ -69,6 +69,36 @@ class AutoMLPipeline:
     def _finalize_result(self, result: AutoMLResult, *, strategy_name: str, evaluated_candidates: int) -> AutoMLResult:
         return replace(result, strategy_name=strategy_name, evaluated_candidates=evaluated_candidates)
 
+    def _final_test_result(
+        self,
+        result: AutoMLResult,
+        dataset: TEPSplits,
+        *,
+        strategy_name: str,
+        evaluated_candidates: int,
+    ) -> AutoMLResult:
+        """Refit a selected configuration on the clean train split and evaluate it on the test split."""
+
+        final_result = self._evaluate_candidate(
+            result.detector_name,
+            result.parameters,
+            dataset.training_dataset(),
+            dataset.evaluation_dataset(),
+            parameter_budget_level=result.parameter_budget_level,
+        )
+
+        if final_result is None:
+            raise ValueError(f"No detector produced the requested metric: {self.config.metric}")
+
+        _, evaluated_result = final_result
+        return self._finalize_result(evaluated_result, strategy_name=strategy_name, evaluated_candidates=evaluated_candidates)
+
+    def _training_validation_datasets(self, dataset: TEPSplits) -> tuple[Any, Any]:
+        return dataset.train_validation_split(
+            validation_fraction=self.config.validation_fraction,
+            random_state=self.config.random_state,
+        )
+
     def _evaluate_candidate_pool(
         self,
         candidates: list[dict[str, object]],
@@ -78,9 +108,10 @@ class AutoMLPipeline:
     ) -> AutoMLResult | None:
         survivors = candidates
         best_result: AutoMLResult | None = None
+        train_dataset, validation_dataset = self._training_validation_datasets(dataset)
 
         for fraction in resource_fractions:
-            train_subset = dataset.training_dataset().subset(fraction, random_state=self.config.random_state)
+            train_subset = train_dataset.subset(fraction, random_state=self.config.random_state)
             scored_candidates: list[tuple[float, dict[str, object], AutoMLResult]] = []
 
             for candidate in survivors:
@@ -90,7 +121,7 @@ class AutoMLPipeline:
                     detector_name,
                     parameters,
                     train_subset,
-                    dataset.evaluation_dataset(),
+                    validation_dataset,
                     parameter_budget_level=parameter_budget_level,
                 )
                 if evaluation_result is None:
@@ -117,6 +148,7 @@ class AutoMLPipeline:
         selected_detectors = detector_names or self.registry.names()
         best_result: AutoMLResult | None = None
         best_score = float("-inf")
+        train_dataset, validation_dataset = self._training_validation_datasets(dataset)
 
         for detector_name in selected_detectors:
             evaluation_result = self._evaluate_candidate(
@@ -125,8 +157,8 @@ class AutoMLPipeline:
                     "contamination": self.config.contamination,
                     "random_state": self.config.random_state,
                 },
-                dataset.training_dataset(),
-                dataset.evaluation_dataset(),
+                train_dataset,
+                validation_dataset,
             )
 
             if evaluation_result is None:
@@ -141,7 +173,12 @@ class AutoMLPipeline:
         if best_result is None:
             raise ValueError(f"No detector produced the requested metric: {self.config.metric}")
 
-        return self._finalize_result(best_result, strategy_name="minimal", evaluated_candidates=len(selected_detectors))
+        return self._final_test_result(
+            best_result,
+            dataset,
+            strategy_name="minimal",
+            evaluated_candidates=len(selected_detectors),
+        )
 
     def run_random_search(self, dataset: TEPSplits, detector_names: list[str] | None = None) -> AutoMLResult:
         """Search detector/parameter combinations with Random Search and return the best result."""
@@ -150,6 +187,7 @@ class AutoMLPipeline:
         search_space = build_default_search_space(random_state=self.config.random_state)
         search = RandomSearch(parameter_space=search_space, random_state=self.config.random_state)
         candidates = search.suggest(selected_detectors, self.config.max_trials)
+        train_dataset, validation_dataset = self._training_validation_datasets(dataset)
 
         best_result: AutoMLResult | None = None
         best_score = float("-inf")
@@ -160,8 +198,8 @@ class AutoMLPipeline:
             evaluation_result = self._evaluate_candidate(
                 detector_name,
                 parameters,
-                dataset.training_dataset(),
-                dataset.evaluation_dataset(),
+                train_dataset,
+                validation_dataset,
             )
             if evaluation_result is None:
                 continue
@@ -175,7 +213,12 @@ class AutoMLPipeline:
         if best_result is None:
             raise ValueError(f"No detector produced the requested metric: {self.config.metric}")
 
-        return self._finalize_result(best_result, strategy_name="random_search", evaluated_candidates=len(candidates))
+        return self._final_test_result(
+            best_result,
+            dataset,
+            strategy_name="random_search",
+            evaluated_candidates=len(candidates),
+        )
 
     def run_successive_halving(self, dataset: TEPSplits, detector_names: list[str] | None = None) -> AutoMLResult:
         """Run successive halving over randomly sampled detector candidates."""
@@ -188,6 +231,7 @@ class AutoMLPipeline:
         search_space = budgeted_spaces[0]
         search = RandomSearch(parameter_space=search_space, random_state=self.config.random_state)
         candidates = search.suggest(selected_detectors, self.config.max_trials)
+        train_dataset, validation_dataset = self._training_validation_datasets(dataset)
 
         resource_fractions = sorted({fraction for fraction in self.config.resource_fractions if 0 < fraction <= 1})
         if not resource_fractions or resource_fractions[-1] < 1.0:
@@ -197,7 +241,12 @@ class AutoMLPipeline:
         if result is None:
             raise ValueError(f"No detector produced the requested metric: {self.config.metric}")
 
-        return self._finalize_result(result, strategy_name="successive_halving", evaluated_candidates=len(candidates))
+        return self._final_test_result(
+            result,
+            dataset,
+            strategy_name="successive_halving",
+            evaluated_candidates=len(candidates),
+        )
 
     def run_hyperband(self, dataset: TEPSplits, detector_names: list[str] | None = None) -> AutoMLResult:
         """Run a small Hyperband-style search over successive-halving brackets."""
@@ -215,6 +264,7 @@ class AutoMLPipeline:
         best_result: AutoMLResult | None = None
         best_score = float("-inf")
         evaluated_candidates = 0
+        train_dataset, validation_dataset = self._training_validation_datasets(dataset)
 
         for bracket in range(s_max, -1, -1):
             bracket_trial_count = min(
@@ -228,12 +278,7 @@ class AutoMLPipeline:
 
             candidates = search.suggest(selected_detectors, bracket_trial_count)
             evaluated_candidates += len(candidates)
-            result = self._evaluate_candidate_pool(
-                candidates,
-                dataset,
-                resource_fractions,
-                parameter_budget_level=parameter_budget_level,
-            )
+            result = self._evaluate_candidate_pool(candidates, dataset, resource_fractions, parameter_budget_level=parameter_budget_level)
             if result is None:
                 continue
 
@@ -248,18 +293,24 @@ class AutoMLPipeline:
         if best_result is None:
             raise ValueError(f"No detector produced the requested metric: {self.config.metric}")
 
-        return self._finalize_result(best_result, strategy_name="hyperband", evaluated_candidates=evaluated_candidates)
+        return self._final_test_result(
+            best_result,
+            dataset,
+            strategy_name="hyperband",
+            evaluated_candidates=evaluated_candidates,
+        )
 
 
 def run_minimal_workflow(
     data_dir: str | Path,
     config: AutoMLConfig | None = None,
     detector_name: str = "isolation_forest",
+    registry: DetectorRegistry | None = None,
 ) -> AutoMLResult:
     """Load the TEP splits, train the baseline detector, and return metrics."""
 
     resolved_config = config or AutoMLConfig()
-    pipeline = AutoMLPipeline(resolved_config)
+    pipeline = AutoMLPipeline(resolved_config, registry=registry)
     splits = load_tep_splits(data_dir)
     return pipeline.run(splits, detector_names=[detector_name])
 
@@ -268,11 +319,12 @@ def run_comparison_workflow(
     data_dir: str | Path,
     detector_names: list[str] | None = None,
     config: AutoMLConfig | None = None,
+    registry: DetectorRegistry | None = None,
 ) -> AutoMLResult:
     """Run the pipeline on an explicit list of detectors, or all registered ones."""
 
     resolved_config = config or AutoMLConfig()
-    pipeline = AutoMLPipeline(resolved_config)
+    pipeline = AutoMLPipeline(resolved_config, registry=registry)
     splits = load_tep_splits(data_dir)
     return pipeline.run(splits, detector_names=detector_names)
 
@@ -281,11 +333,12 @@ def run_random_search_workflow(
     data_dir: str | Path,
     detector_names: list[str] | None = None,
     config: AutoMLConfig | None = None,
+    registry: DetectorRegistry | None = None,
 ) -> AutoMLResult:
     """Run the pipeline with Random Search over detector parameters."""
 
     resolved_config = config or AutoMLConfig()
-    pipeline = AutoMLPipeline(resolved_config)
+    pipeline = AutoMLPipeline(resolved_config, registry=registry)
     splits = load_tep_splits(data_dir)
     return pipeline.run_random_search(splits, detector_names=detector_names)
 
@@ -294,11 +347,12 @@ def run_successive_halving_workflow(
     data_dir: str | Path,
     detector_names: list[str] | None = None,
     config: AutoMLConfig | None = None,
+    registry: DetectorRegistry | None = None,
 ) -> AutoMLResult:
     """Run successive halving over detector candidates."""
 
     resolved_config = config or AutoMLConfig()
-    pipeline = AutoMLPipeline(resolved_config)
+    pipeline = AutoMLPipeline(resolved_config, registry=registry)
     splits = load_tep_splits(data_dir)
     return pipeline.run_successive_halving(splits, detector_names=detector_names)
 
@@ -307,11 +361,12 @@ def run_hyperband_workflow(
     data_dir: str | Path,
     detector_names: list[str] | None = None,
     config: AutoMLConfig | None = None,
+    registry: DetectorRegistry | None = None,
 ) -> AutoMLResult:
     """Run Hyperband over detector candidates."""
 
     resolved_config = config or AutoMLConfig()
-    pipeline = AutoMLPipeline(resolved_config)
+    pipeline = AutoMLPipeline(resolved_config, registry=registry)
     splits = load_tep_splits(data_dir)
     return pipeline.run_hyperband(splits, detector_names=detector_names)
 
@@ -320,7 +375,8 @@ def run_search_workflow(
     data_dir: str | Path,
     detector_names: list[str] | None = None,
     config: AutoMLConfig | None = None,
+    registry: DetectorRegistry | None = None,
 ) -> AutoMLResult:
     """Run the default random-search search mode over all or selected detectors."""
 
-    return run_random_search_workflow(data_dir, detector_names=detector_names, config=config)
+    return run_random_search_workflow(data_dir, detector_names=detector_names, config=config, registry=registry)

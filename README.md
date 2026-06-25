@@ -3,19 +3,28 @@
 
 # Konzept
 
-Ziel des Projekts ist ein modulares AutoML-System für Anomalieerkennung auf dem TEP-Datensatz. Die Pipeline soll so aufgebaut sein, dass Daten, Modelle, Suchstrategien und Bewertung klar voneinander getrennt sind. Dadurch lassen sich einzelne Bausteine später austauschen, ohne das gesamte System umzubauen.
+Ziel des Projekts ist ein modulares AutoML-System für Anomalieerkennung auf dem TEP-Datensatz. Die Pipeline trennt Daten, Modelle, Suchstrategien, Evaluation und Berichtserzeugung klar voneinander. Dadurch lassen sich Baselines, Suchverfahren und externe Referenzframeworks austauschen, ohne den restlichen Ablauf umzubauen.
+
+Am Ende soll ein fairer, reproduzierbarer Vergleich entstehen, der zeigt:
+- welche Detektoren auf TEP am besten funktionieren
+- wie sich Suchstrategien wie Random Search, Successive Halving und Hyperband unterscheiden
+- wie sich die eigene Pipeline gegen Referenzmodelle wie PyOD verhält
+- welche Konfiguration für das finale Ergebnis ausgewählt wird
+
+Das Ergebnis eines Laufs ist deshalb nicht nur ein einzelnes Modell, sondern ein nachvollziehbarer Benchmark mit Metriken, Parametern, Seed, Split-Informationen und einem lesbaren Vergleichsbericht.
+
+Ein zweites Hauptziel ist der faire Vergleich mit PyOD. Dazu wird die eigene AutoML-Pipeline unter denselben Split-Bedingungen, denselben Ressourcen- und Seed-Vorgaben und mit derselben Auswertungslogik gegen ausgewählte PyOD-Modelle getestet. Da es sich um ein unsupervised Setting handelt, werden Modelle nicht über Labels im Training verglichen, sondern über ihre Anomalie-Scores und die daraus berechneten Kennzahlen auf einem getrennten, gelabelten Testsplit. Validation dient dabei nur der Modell- und Strategiewahl, der Testsplit ausschließlich der finalen Berichterstattung.
 
 ## Grundidee
 
-Die erste Version startet im unsupervised Setting:
+Die aktuelle Version startet im unsupervised Setting und läuft in vier Schritten:
 
 1. Die TEP-Parquet-Dateien werden aus dem `automl/data/`-Ordner geladen.
-2. Als Training werden nur die fehlerfreien Trainingsdaten verwendet.
-3. Eine Suchstrategie erzeugt Kandidaten für Modelle und Parameter.
-4. Ein Detektor wird aus einer Registry erzeugt und auf den Trainingsdaten gelernt.
-5. Der Detektor gibt Anomalie-Scores für die Testdaten aus.
-6. Die Evaluation berechnet Metriken wie PR-AUC, F1 und Laufzeit.
-7. Das beste Setup wird ausgewählt und kann im nächsten Schritt weiterverwendet werden.
+2. Aus `train_fault_free` wird ein reproduzierbarer Train/Validation-Split gebildet.
+3. Eine Registry erzeugt den gewünschten Detektor oder eine ganze Vergleichsmenge.
+4. Die gewählte Strategie trainiert auf dem Trainsplit, bewertet auf Validation und refittet das beste Setup für die finale Testbewertung.
+
+Der Testsplit wird nur für die finale Berichterstattung verwendet. Validation dient ausschließlich der Modellauswahl und Strategieauswahl.
 
 Die fehlerhaften Trainingsdaten werden in der ersten Version nicht für das Training genutzt. Sie bleiben aber für spätere semi-supervised Ansätze oder zusätzliche Experimente verfügbar.
 
@@ -95,12 +104,22 @@ Die erste Version des Projekts soll:
 - nur Batch-Daten verarbeiten
 - unüberwacht trainieren
 - auf dem fehlerfreien Training lernen
-- auf den Testdaten bewerten
-- PyOD erst ganz am Ende als Referenz einbauen
+- auf Validation auswählen und auf Test final bewerten
+- Ergebnisse, Seed und Split-Informationen persistent speichern
+- PyOD als optionale Referenz direkt mitvergleichbar machen
+
+## Was der Run liefert
+
+Ein Lauf erzeugt am Ende:
+- ein ausgewähltes Modell mit Parametern
+- Kennzahlen wie PR-AUC, ROC-AUC, F1 und Laufzeit
+- Metadaten zu Seed, Datenpfad, Split-Plan und Strategie
+- auf Wunsch eine JSON- oder JSONL-Datei für die Historie
+- auf Wunsch einen Markdown-Vergleichsbericht oder einen aggregierten Bericht über mehrere Seeds
 
 ## Aktueller Startpunkt
 
-Der erste lauffähige Workflow liegt in `automl.pipeline.run_minimal_workflow(data_dir)`.
+Der erste lauffähige Workflow liegt in `automl.pipeline.run_minimal_workflow(data_dir)`. Für vollständige Vergleiche gibt es außerdem `BenchmarkRunner` und die Berichtsfunktionen in `automl.reporting`.
 
 Am einfachsten startest du ihn jetzt so:
 
@@ -133,6 +152,11 @@ Im aktuellen Stand werden zwei austauschbare Detektoren verglichen:
 - `isolation_forest`
 - `local_outlier_factor`
 - `one_class_svm`
+- `elliptic_envelope`
+- `hbos`
+- `copod`
+- `ecod`
+- optional zusätzlich PyOD-Varianten über `--registry pyod` oder `--registry all`
 
 Wenn du gezielt vergleichen willst:
 
@@ -147,6 +171,8 @@ python run_automl.py --strategy search --compare isolation_forest local_outlier_
 ```
 
 Die Registry in `automl/registry.py` erzeugt diese Modelle. Der Minimal-Workflow nutzt standardmäßig `isolation_forest`, damit der Start schnell bleibt. Wenn du `--compare` ohne weitere Namen aufrufst, werden automatisch alle registrierten Detektoren verglichen. Wenn du nur eine Teilmenge willst, kannst du die Namen direkt angeben.
+
+Für wiederholte Experimente mit mehreren Seeds und Auswertungen auf mehreren Registries ist `automl.benchmark.BenchmarkRunner` der zentrale Einstiegspunkt. Daraus entstehen dann ein einzelnes JSONL-Protokoll und ein Markdown-Bericht mit Einzel- und Aggregatwerten.
 
 Beispiel für einen Vergleich in Python:
 

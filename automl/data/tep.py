@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -15,6 +16,25 @@ class TEPDataset:
     labels: pd.Series | None = None
     fault_class: pd.Series | None = None
     name: str = ""
+
+    def select_rows(self, indices: Sequence[int], *, name: str | None = None) -> "TEPDataset":
+        """Return a dataset containing the given row indices."""
+
+        selected_indices = np.asarray(indices, dtype=int)
+        sampled_features = self.features.iloc[selected_indices].reset_index(drop=True)
+        sampled_labels = None
+        if self.labels is not None:
+            sampled_labels = self.labels.iloc[selected_indices].reset_index(drop=True)
+        sampled_fault_class = None
+        if self.fault_class is not None:
+            sampled_fault_class = self.fault_class.iloc[selected_indices].reset_index(drop=True)
+
+        return TEPDataset(
+            features=sampled_features,
+            labels=sampled_labels,
+            fault_class=sampled_fault_class,
+            name=self.name if name is None else name,
+        )
 
     def subset(self, fraction: float, *, random_state: int | None = None) -> "TEPDataset":
         """Return a row-sampled copy of the dataset."""
@@ -36,20 +56,7 @@ class TEPDataset:
         random_generator = np.random.default_rng(random_state)
         selected_indices = np.sort(random_generator.choice(len(self.features), size=row_count, replace=False))
 
-        sampled_features = self.features.iloc[selected_indices].reset_index(drop=True)
-        sampled_labels = None
-        if self.labels is not None:
-            sampled_labels = self.labels.iloc[selected_indices].reset_index(drop=True)
-        sampled_fault_class = None
-        if self.fault_class is not None:
-            sampled_fault_class = self.fault_class.iloc[selected_indices].reset_index(drop=True)
-
-        return TEPDataset(
-            features=sampled_features,
-            labels=sampled_labels,
-            fault_class=sampled_fault_class,
-            name=self.name,
-        )
+        return self.select_rows(selected_indices)
 
 
 @dataclass(slots=True)
@@ -64,6 +71,35 @@ class TEPSplits:
     train_faulty: TEPDataset
     test_fault_free: TEPDataset
     test_faulty: TEPDataset
+
+    def train_validation_split(
+        self,
+        *,
+        validation_fraction: float = 0.2,
+        random_state: int | None = None,
+    ) -> tuple[TEPDataset, TEPDataset]:
+        """Split the clean training data into train and validation sets."""
+
+        if not 0 < validation_fraction < 1:
+            raise ValueError("validation_fraction must be in the interval (0, 1)")
+
+        total_rows = len(self.train_fault_free.features)
+        if total_rows < 2:
+            return self.train_fault_free, self.train_fault_free
+
+        validation_count = max(1, int(round(total_rows * validation_fraction)))
+        validation_count = min(validation_count, total_rows - 1)
+
+        random_generator = np.random.default_rng(random_state)
+        shuffled_indices = np.arange(total_rows)
+        random_generator.shuffle(shuffled_indices)
+
+        validation_indices = np.sort(shuffled_indices[:validation_count])
+        train_indices = np.sort(shuffled_indices[validation_count:])
+
+        train_dataset = self.train_fault_free.select_rows(train_indices, name="tep_train")
+        validation_dataset = self.train_fault_free.select_rows(validation_indices, name="tep_validation")
+        return train_dataset, validation_dataset
 
     def training_dataset(self) -> TEPDataset:
         """Return the clean training split for unsupervised learning."""
