@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from .pipeline import AutoMLResult
 
@@ -46,22 +47,64 @@ def result_to_record(result: AutoMLResult) -> dict[str, Any]:
     }
 
 
-def save_result_json(result: AutoMLResult, path: str | Path) -> Path:
+def build_benchmark_metadata(
+    *,
+    data_dir: str | Path,
+    strategy_name: str,
+    random_state: int | None = None,
+    split_plan: dict[str, Any] | None = None,
+    detector_names: Sequence[str] | None = None,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a small metadata block for persisted benchmark runs."""
+
+    metadata: dict[str, Any] = {
+        "timestamp_utc": datetime.now(UTC).isoformat(),
+        "data_dir": str(data_dir),
+        "strategy_name": strategy_name,
+        "random_state": random_state,
+        "split_plan": None if split_plan is None else _normalize_value(split_plan),
+        "detector_names": None if detector_names is None else list(detector_names),
+    }
+
+    if extra:
+        metadata.update({str(key): _normalize_value(value) for key, value in extra.items()})
+
+    return metadata
+
+
+def save_result_json(
+    result: AutoMLResult,
+    path: str | Path,
+    *,
+    metadata: dict[str, Any] | None = None,
+) -> Path:
     """Write a single run result as formatted JSON."""
 
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(result_to_record(result), indent=2, ensure_ascii=False), encoding="utf-8")
+    record = result_to_record(result)
+    if metadata:
+        record["metadata"] = _normalize_value(metadata)
+    output_path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
     return output_path
 
 
-def append_result_jsonl(result: AutoMLResult, path: str | Path) -> Path:
+def append_result_jsonl(
+    result: AutoMLResult,
+    path: str | Path,
+    *,
+    metadata: dict[str, Any] | None = None,
+) -> Path:
     """Append a run result as one JSON object per line."""
 
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    record = result_to_record(result)
+    if metadata:
+        record["metadata"] = _normalize_value(metadata)
     with output_path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(result_to_record(result), ensure_ascii=False))
+        handle.write(json.dumps(record, ensure_ascii=False))
         handle.write("\n")
     return output_path
 

@@ -47,6 +47,7 @@
 - [x] Parameter-Budget pro Suchstufe ergänzt
 - [x] Vollsuchmodus über alle registrierten Detektoren mit Strategieauswahl möglich
 - [x] Ein kleines CLI für wiederholbare Runs gebaut
+- [x] PyOD-Adapter für Benchmarking entworfen
 
 ## Noch nicht implementiert
 
@@ -93,9 +94,74 @@
 - [x] ECOD als mögliche Baseline bekannt
 - [x] Extended Isolation Forest als mögliche Baseline bekannt
 
+## Priorisierung
+
+### Priorität 1: Vergleichsgrundlage sauber machen
+
+- [ ] Saubere Train/Validation/Test-Trennung für alle Vergleiche einziehen
+- [ ] PyOD-Adapter oder PyOD-Benchmark-Harness direkt in die Pipeline hängen
+- [ ] Einheitliche Vorverarbeitung und Threshold-Logik für alle Modelle festziehen
+- [ ] Vergleichsläufe mit mehreren Seeds und persistierten Ergebnissen etablieren
+
+### Benchmark-Regeln
+
+- [ ] Hauptmetrik festlegen, aktuell PR-AUC
+- [ ] Sekundärmetriken festlegen: ROC-AUC, F1 und Laufzeit
+- [ ] Gleiche Splits für AutoML und PyOD verwenden
+- [ ] Validation nur für Modell- und Strategieauswahl nutzen
+- [ ] Testsplit nur für die finale Berichterstattung verwenden
+- [ ] Gleiche Vorverarbeitung und gleiche Threshold-Logik für alle Modelle anwenden
+- [ ] Mehrere Seeds pro Experiment fahren und Mittelwert plus Streuung berichten
+- [x] Alle Läufe mit Modellname, Parametern, Seed und Metriken persistieren
+- [ ] Gleiche Budget- und Laufzeitgrenzen für AutoML und PyOD festlegen
+- [x] Einheitliche Evaluation definieren
+
+### Split-Plan für TEP
+
+- [ ] Train nur auf `train_fault_free`
+- [ ] Validation aus einem Anteil von `train_fault_free` bilden
+- [ ] `train_faulty` nur für spätere explorative Analysen oder zusätzliche Experimente nutzen
+- [ ] Test aus `test_fault_free` und `test_faulty` zusammensetzen
+- [ ] Validation für Suchstrategien und Modellwahl nutzen
+- [ ] Test nur für die finale Berichterstattung verwenden
+- [ ] Split-Ziehung reproduzierbar machen über festen Seed
+- [ ] Split-Informationen zusammen mit den Ergebnissen speichern
+- [ ] Gleiche Split-Definition für AutoML und PyOD verwenden
+
+### Persistenz-Plan
+
+- [x] Ergebnisse als JSON und JSONL speicherbar machen
+- [x] Benchmark-Metadaten mit Zeitstempel, Datenpfad und Strategie mit speichern
+- [x] Ergebnisdarstellung und Persistenz auf dieselbe AutoMLResult-Struktur stützen
+- [x] Split-Informationen in gespeicherten Ergebnissen mit ablegen
+- [x] Seed-Informationen in gespeicherten Ergebnissen mit ablegen
+- [x] Mehrere Runs in einer gemeinsamen History-Datei sammelbar machen
+
+### Priorität 2: Baseline-Abdeckung vervollständigen
+
+- [ ] Autoencoder als neuronale Baseline prüfen
+- [ ] LODA als schnelle Baseline prüfen
+- [ ] Extended Isolation Forest als Ensemble-Variante prüfen
+
+### Priorität 3: Suchstrategien für den AutoML-Vergleich
+
+- [ ] Optuna als nächstes Suchframework evaluieren
+- [ ] Bayesian Optimization als Suchstrategie ergänzen
+- [ ] SMAC als Suchstrategie implementieren
+- [ ] Irace als Suchstrategie implementieren
+- [ ] NSGA-II als multiobjective Suchstrategie prüfen
+
+### Priorität 4: Erweiterte Forschungsoptionen
+
+- [ ] MOGA-FS als Feature-Selection-Ansatz prüfen
+- [ ] RLNAS als neural architecture search Ansatz prüfen
+- [ ] ASAD als Auto-Selective Anomaly Detection Ansatz prüfen
+- [ ] Meta-Learning als Initialisierung einsetzen
+- [ ] Semi-supervised learning vorbereiten
+- [ ] Streaming / Online-Detection vorbereiten
+
 ## Nächste Arbeitspakete
 
 - [ ] AnoGAN als späteres Deep-Learning-Modell prüfen
 - [x] TODS als Vergleichsframework extern aufbereitet
 - [ ] Vergleichstabelle für Methoden und Frameworks erstellen
-- [ ] Optuna als nächstes Suchframework evaluieren

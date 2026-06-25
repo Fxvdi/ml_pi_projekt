@@ -7,24 +7,7 @@ import numpy as np
 
 from ..data.tep import TEPDataset
 from ..detectors.base import BaseDetector
-from .metrics import f1_from_scores, pr_auc, roc_auc
-
-
-def _score_in_batches(detector: BaseDetector, features: np.ndarray, *, batch_size: int = 50000) -> np.ndarray:
-    """Score rows in batches to keep memory usage stable on large datasets."""
-
-    if features.ndim == 1:
-        features = features.reshape(-1, 1)
-
-    if len(features) <= batch_size:
-        return np.asarray(detector.score_samples(features), dtype=float)
-
-    batches: list[np.ndarray] = []
-    for start_index in range(0, len(features), batch_size):
-        batch = features[start_index : start_index + batch_size]
-        batches.append(np.asarray(detector.score_samples(batch), dtype=float))
-
-    return np.concatenate(batches, axis=0)
+from .protocol import evaluate_score_arrays, score_in_batches
 
 
 @dataclass(slots=True)
@@ -53,17 +36,14 @@ def evaluate_detector(
 
     test_scores = _score_in_batches(detector, test_features)
     metrics: dict[str, float] = {"train_time_seconds": train_time_seconds}
-    resolved_threshold = threshold
-
-    if resolved_threshold is None:
-        train_scores = _score_in_batches(detector, train_features)
-        resolved_threshold = float(np.quantile(train_scores, 1.0 - contamination))
-
-    if test_dataset.labels is not None:
-        labels = np.asarray(test_dataset.labels)
-        metrics["pr_auc"] = pr_auc(labels, test_scores)
-        metrics["roc_auc"] = roc_auc(labels, test_scores)
-        if resolved_threshold is not None:
-            metrics["f1"] = f1_from_scores(labels, test_scores, resolved_threshold)
+    train_scores = _score_in_batches(detector, train_features)
+    evaluation_metrics, resolved_threshold = evaluate_score_arrays(
+        test_dataset.labels,
+        train_scores,
+        test_scores,
+        contamination=contamination,
+        threshold=threshold,
+    )
+    metrics.update(evaluation_metrics)
 
     return EvaluationResult(metrics=metrics, train_time_seconds=train_time_seconds, threshold=resolved_threshold)
