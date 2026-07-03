@@ -16,3 +16,8 @@ export_rdata.ipynb
 # data
 *.parquet
 *.RData
+
+# MetaOD: große vortrainierte Modelle (via scripts/README neu ladbar) und
+# regenerierbare Zwischenartefakte
+trained_models/
+artifacts/
